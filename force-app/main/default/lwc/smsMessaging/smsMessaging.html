@@ -1,0 +1,139 @@
+<template>
+    <!-- Trigger button rendered on the record page -->
+    <div class="sms-launcher">
+        <lightning-button
+            variant="brand"
+            label="SMS History"
+            icon-name="utility:sms"
+            onclick={openModal}
+        ></lightning-button>
+        <template if:true={unreadCount}>
+            <span class="sms-badge">{unreadCount}</span>
+        </template>
+    </div>
+
+    <!-- Modal dialog -->
+    <template if:true={isModalOpen}>
+        <section
+            role="dialog"
+            tabindex="-1"
+            aria-labelledby="sms-modal-heading"
+            aria-modal="true"
+            class="slds-modal slds-fade-in-open"
+        >
+            <div class="slds-modal__container sms-modal-container">
+
+                <!-- Header -->
+                <header class="slds-modal__header sms-modal-header">
+                    <button
+                        class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+                        title="Close"
+                        onclick={closeModal}
+                    >
+                        <lightning-icon icon-name="utility:close" size="small" alternative-text="Close"></lightning-icon>
+                    </button>
+                    <div class="sms-header-content">
+                        <lightning-icon icon-name="utility:sms" size="small" class="sms-header-icon"></lightning-icon>
+                        <div>
+                            <h2 id="sms-modal-heading" class="slds-modal__title sms-modal-title">
+                                SMS Conversation
+                            </h2>
+                            <p class="sms-contact-name">{contactDisplayName}</p>
+                        </div>
+                    </div>
+                </header>
+
+                <!-- Body: message thread -->
+                <div class="slds-modal__content sms-modal-body" lwc:ref="messageContainer">
+
+                    <!-- Loading spinner -->
+                    <template if:true={isLoading}>
+                        <div class="sms-spinner-wrap">
+                            <lightning-spinner alternative-text="Loading messages" size="medium"></lightning-spinner>
+                        </div>
+                    </template>
+
+                    <!-- Error state -->
+                    <template if:true={hasError}>
+                        <div class="slds-notify slds-notify_alert slds-alert_error" role="alert">
+                            <lightning-icon icon-name="utility:error" size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                            {errorMessage}
+                        </div>
+                    </template>
+
+                    <!-- Empty state -->
+                    <template if:false={hasMessages}>
+                        <template if:false={isLoading}>
+                            <div class="sms-empty-state">
+                                <lightning-icon icon-name="utility:chat" size="large" class="sms-empty-icon"></lightning-icon>
+                                <p class="sms-empty-text">No messages yet. Start the conversation below.</p>
+                            </div>
+                        </template>
+                    </template>
+
+                    <!-- Message list -->
+                    <template if:true={hasMessages}>
+                        <ul class="sms-message-list">
+                            <template for:each={messages} for:item="msg">
+                                <li key={msg.id} class={msg.bubbleClass}>
+                                    <div class="sms-bubble">
+                                        <p class="sms-bubble-body">{msg.body}</p>
+                                        <div class="sms-bubble-meta">
+                                            <span class="sms-bubble-time">{msg.formattedDate}</span>
+                                            <template if:true={msg.isOutbound}>
+                                                <lightning-icon
+                                                    icon-name={msg.statusIcon}
+                                                    size="xx-small"
+                                                    class={msg.statusClass}
+                                                    title={msg.status}
+                                                ></lightning-icon>
+                                            </template>
+                                        </div>
+                                    </div>
+                                    <template if:true={msg.isInbound}>
+                                        <span class="sms-sender-label">{msg.fromDisplay}</span>
+                                    </template>
+                                </li>
+                            </template>
+                        </ul>
+                    </template>
+                </div>
+
+                <!-- Footer: compose area -->
+                <footer class="slds-modal__footer sms-modal-footer">
+                    <div class="sms-compose-area">
+                        <lightning-textarea
+                            name="messageBody"
+                            placeholder="Type a message..."
+                            value={newMessageBody}
+                            onchange={handleMessageInput}
+                            onkeydown={handleKeyDown}
+                            max-length="1600"
+                            class="sms-compose-input"
+                            disabled={isSending}
+                            label="Message"
+                            variant="label-hidden"
+                        ></lightning-textarea>
+                        <div class="sms-compose-actions">
+                            <span class="sms-char-count">{charCountDisplay}</span>
+                            <lightning-button-icon
+                                icon-name="utility:send"
+                                variant="brand"
+                                size="medium"
+                                alternative-text="Send message"
+                                title="Send (Ctrl+Enter)"
+                                onclick={sendMessage}
+                                disabled={isSendDisabled}
+                                class="sms-send-btn"
+                            ></lightning-button-icon>
+                        </div>
+                    </div>
+                    <template if:true={sendError}>
+                        <p class="sms-send-error">{sendError}</p>
+                    </template>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open" onclick={closeModal}></div>
+    </template>
+</template>
