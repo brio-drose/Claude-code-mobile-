@@ -208,8 +208,8 @@
 
   // Cross-record messages injected when toggle is ON
   const crossMsgs = [
-    { dir:'cross-out', body:'Your renewal documents are ready for your review.', time:'2:19 PM', record:'Matter: Acme Renewal 2025' },
-    { dir:'cross-in',  body:'Thanks, I'll take a look this afternoon.',          time:'2:20 PM', record:'Matter: Acme Renewal 2025', sender:'+1 (555) 123-4567' },
+    { dir:'cross-out', body:'Your renewal documents are ready for your review.',   time:'2:19 PM', record:'Matter: Acme Renewal 2025' },
+    { dir:'cross-in',  body:'Thanks, I will take a look this afternoon.',          time:'2:20 PM', record:'Matter: Acme Renewal 2025', sender:'+1 (555) 123-4567' },
     { dir:'cross-out', body:'Following up on your general account inquiry — please let us know if you need anything else.', time:'9:45 AM', record:'Acme Corp (Account)' },
   ];
 
@@ -225,20 +225,17 @@
     if (showAll) {
       const list = document.getElementById('msgList');
 
-      // Inject "yesterday" cross messages after index 1 (after first outbound)
-      const afterEl = list.children[1];
-      crossMsgs.slice(0,2).forEach(m => {
+      // Insert first two cross messages after the first outbound bubble,
+      // advancing the anchor each time to preserve order.
+      let anchor = list.children[1];
+      crossMsgs.slice(0, 2).forEach(m => {
         const li = buildCrossMsgEl(m);
-        afterEl.insertAdjacentElement('afterend', li);
+        anchor.insertAdjacentElement('afterend', li);
+        anchor = li;
       });
 
-      // Inject "today" cross message at end
-      const divider = document.createElement('div');
-      divider.className = 'cross-divider';
-      const todayDiv = list.querySelector('.date-divider:last-of-type');
-      // just append at end
-      const li3 = buildCrossMsgEl(crossMsgs[2]);
-      list.appendChild(li3);
+      // Append third cross message (today) at the end of the list
+      list.appendChild(buildCrossMsgEl(crossMsgs[2]));
       thread.scrollTop = thread.scrollHeight;
     }
   }
