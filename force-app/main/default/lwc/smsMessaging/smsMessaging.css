@@ -1,77 +1,57 @@
-/* ── Launcher ────────────────────────────────────────────────────────────── */
-.sms-launcher {
-    position: relative;
-    display: inline-block;
-}
-
-.sms-badge {
-    position: absolute;
-    top: -6px;
-    right: -6px;
-    background: #ea001e;
-    color: #fff;
-    border-radius: 50%;
-    min-width: 18px;
-    height: 18px;
-    font-size: 10px;
-    font-weight: 700;
-    line-height: 18px;
-    text-align: center;
-    padding: 0 4px;
-    pointer-events: none;
-}
-
-/* ── Modal container ─────────────────────────────────────────────────────── */
-.sms-modal-container {
+/* ── Outer panel — fills whatever space the FlexiPage tab gives it ────────── */
+.sms-panel {
     display: flex;
     flex-direction: column;
-    width: 480px;
-    max-width: 95vw;
-    height: 620px;
-    max-height: 90vh;
+    height: 100%;
+    min-height: 400px;
+    background: #fff;
+    border: 1px solid #dddbda;
+    border-radius: 4px;
+    overflow: hidden;
 }
 
 /* ── Header ──────────────────────────────────────────────────────────────── */
-.sms-modal-header {
+.sms-panel-header {
     background: linear-gradient(135deg, #0070d2 0%, #005fb2 100%);
-    padding: 1rem 1.5rem;
+    padding: 0.875rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     flex-shrink: 0;
 }
 
 .sms-header-content {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.625rem;
 }
 
 .sms-header-icon {
-    --lwc-colorTextIconInverse: #fff;
-    opacity: 0.9;
+    --lwc-colorTextIconInverse: rgba(255, 255, 255, 0.85);
 }
 
-.sms-modal-title {
-    color: #fff !important;
-    font-size: 1rem;
+.sms-panel-title {
+    color: #fff;
+    font-size: 0.9375rem;
     font-weight: 700;
     line-height: 1.2;
 }
 
 .sms-contact-name {
     color: rgba(255, 255, 255, 0.8);
-    font-size: 0.8125rem;
+    font-size: 0.75rem;
     margin: 0;
     line-height: 1.3;
 }
 
-/* ── Body / message thread ───────────────────────────────────────────────── */
-.sms-modal-body {
+/* ── Message thread — scrollable, grows to fill remaining height ─────────── */
+.sms-thread {
     flex: 1 1 auto;
     overflow-y: auto;
     padding: 1rem 1.25rem;
     background: #f3f3f3;
     display: flex;
     flex-direction: column;
-    gap: 0;
 }
 
 /* ── Spinner & empty state ───────────────────────────────────────────────── */
@@ -80,7 +60,7 @@
     justify-content: center;
     align-items: center;
     flex: 1;
-    min-height: 200px;
+    min-height: 160px;
 }
 
 .sms-empty-state {
@@ -118,7 +98,7 @@
 .sms-message {
     display: flex;
     flex-direction: column;
-    max-width: 78%;
+    max-width: 75%;
 }
 
 .sms-message--outbound {
@@ -133,7 +113,7 @@
 
 /* ── Bubbles ─────────────────────────────────────────────────────────────── */
 .sms-bubble {
-    padding: 0.625rem 0.875rem;
+    padding: 0.5625rem 0.875rem;
     border-radius: 18px;
     word-break: break-word;
     line-height: 1.45;
@@ -153,7 +133,7 @@
 }
 
 .sms-bubble-body {
-    margin: 0 0 0.25rem;
+    margin: 0 0 0.2rem;
     font-size: 0.875rem;
 }
 
@@ -176,10 +156,10 @@
 }
 
 /* ── Status icons ────────────────────────────────────────────────────────── */
-.sms-status-delivered { --lwc-colorTextIconInverse: rgba(255,255,255,0.85); }
-.sms-status-sent      { --lwc-colorTextIconInverse: rgba(255,255,255,0.6);  }
+.sms-status-delivered { --lwc-colorTextIconInverse: rgba(255, 255, 255, 0.85); }
+.sms-status-sent      { --lwc-colorTextIconInverse: rgba(255, 255, 255, 0.6);  }
 .sms-status-failed    { --lwc-colorTextIconInverse: #ffb3b3; }
-.sms-status-pending   { --lwc-colorTextIconInverse: rgba(255,255,255,0.6);  }
+.sms-status-pending   { --lwc-colorTextIconInverse: rgba(255, 255, 255, 0.6);  }
 
 .sms-sender-label {
     font-size: 0.6875rem;
@@ -188,8 +168,8 @@
     padding-left: 4px;
 }
 
-/* ── Footer / compose ────────────────────────────────────────────────────── */
-.sms-modal-footer {
+/* ── Compose footer ──────────────────────────────────────────────────────── */
+.sms-compose-footer {
     flex-shrink: 0;
     padding: 0.75rem 1rem;
     background: #fff;
@@ -206,11 +186,6 @@
     flex: 1;
 }
 
-/* Shrink the textarea label space that LWC adds */
-.sms-compose-input lightning-textarea {
-    margin-bottom: 0;
-}
-
 .sms-compose-actions {
     display: flex;
     flex-direction: column;
@@ -224,10 +199,6 @@
     color: #706e6b;
     min-width: 28px;
     text-align: center;
-}
-
-.sms-send-btn {
-    flex-shrink: 0;
 }
 
 .sms-send-error {
