@@ -7,20 +7,19 @@
         <target>lightning__AppPage</target>
     </targets>
     <targetConfigs>
-        <targetConfig targets="lightning__RecordPage">
+        <targetConfig targets="lightning__RecordPage,lightning__AppPage">
             <property
-                name="contactName"
+                name="fromNumber"
                 type="String"
-                label="Contact Display Name"
-                description="Override the contact name shown in the panel header."
+                label="Dialpad From Number"
+                description="The Dialpad phone number outbound messages are sent from (E.164 format, e.g. +18005559876)."
+                required="true"
             />
-        </targetConfig>
-        <targetConfig targets="lightning__AppPage">
             <property
                 name="contactName"
                 type="String"
-                label="Contact Display Name"
-                description="Override the contact name shown in the panel header."
+                label="Contact Display Name (override)"
+                description="Optional: override the contact name shown in the panel header. If blank, the name is derived from the SMS records."
             />
         </targetConfig>
     </targetConfigs>

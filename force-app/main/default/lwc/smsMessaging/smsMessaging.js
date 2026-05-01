@@ -5,26 +5,31 @@ import sendSms from '@salesforce/apex/SmsMessagingController.sendSms';
 
 const MAX_CHARS = 1600;
 
-// Objects that display the "show all account messages" toggle
 const TOGGLE_OBJECTS = new Set(['Intake__c', 'Matter__c']);
 
+// Dialpad message_status → icon mapping (all lowercase keys)
 const STATUS_ICONS = {
-    Delivered: 'utility:check',
-    Sent:      'utility:routing_offline',
-    Failed:    'utility:error',
-    Pending:   'utility:clock'
+    delivered:   'utility:check',
+    sent:        'utility:routing_offline',
+    queued:      'utility:clock',
+    failed:      'utility:error',
+    undelivered: 'utility:error',
+    received:    'utility:check'
 };
 const STATUS_CLASSES = {
-    Delivered: 'sms-status-delivered',
-    Sent:      'sms-status-sent',
-    Failed:    'sms-status-failed',
-    Pending:   'sms-status-pending'
+    delivered:   'sms-status-delivered',
+    sent:        'sms-status-sent',
+    queued:      'sms-status-pending',
+    failed:      'sms-status-failed',
+    undelivered: 'sms-status-failed',
+    received:    'sms-status-delivered'
 };
 
 export default class SmsMessaging extends LightningElement {
     @api recordId;
-    @api objectApiName;  // automatically set by platform on record pages
-    @api contactName;
+    @api objectApiName;   // automatically populated by platform on record pages
+    @api contactName;     // optional override for the header display name
+    @api fromNumber;      // Dialpad "from" number — configure in App Builder
 
     @track showAllMessages  = false;
     @track isLoading        = false;
@@ -35,6 +40,10 @@ export default class SmsMessaging extends LightningElement {
     @track errorMessage     = '';
     @track sendError        = '';
 
+    // Derived from loaded messages — used for the send call and header
+    _contactPhone = null;
+    _contactName  = null;
+
     // ── lifecycle ────────────────────────────────────────────────────────────
 
     connectedCallback() {
@@ -44,7 +53,7 @@ export default class SmsMessaging extends LightningElement {
     // ── computed ─────────────────────────────────────────────────────────────
 
     get contactDisplayName() {
-        return this.contactName || 'Contact';
+        return this.contactName || this._contactName || 'Contact';
     }
 
     get showToggle() {
@@ -86,6 +95,7 @@ export default class SmsMessaging extends LightningElement {
         getSmsHistory({ recordId: this.recordId, showAll: this.showAllMessages })
             .then(result => {
                 this.messages = result.map(w => this._toViewModel(w));
+                this._deriveContactInfo(result);
                 this._scrollToBottom();
             })
             .catch(error => {
@@ -97,9 +107,22 @@ export default class SmsMessaging extends LightningElement {
             });
     }
 
+    // Pull contact name and phone from the most recent inbound message
+    _deriveContactInfo(wrappers) {
+        for (let i = wrappers.length - 1; i >= 0; i--) {
+            const w = wrappers[i];
+            if (w.direction?.toLowerCase() === 'inbound') {
+                if (w.contactName)  this._contactName  = w.contactName;
+                if (w.contactPhone) this._contactPhone = w.contactPhone;
+                if (w.fromNumber && !this._contactPhone) this._contactPhone = w.fromNumber;
+                break;
+            }
+        }
+    }
+
     _toViewModel(w) {
-        const isOutbound = w.direction === 'Outbound';
-        const status     = w.status || 'Sent';
+        const isOutbound = (w.direction || '').toLowerCase() === 'outbound';
+        const status     = (w.status || 'sent').toLowerCase();
         const cross      = w.isCrossRecord === true;
 
         let bubbleClass = 'sms-message ';
@@ -108,6 +131,10 @@ export default class SmsMessaging extends LightningElement {
         } else {
             bubbleClass += cross ? 'sms-message--cross-inbound' : 'sms-message--inbound';
         }
+
+        // For inbound messages the contact's number is from_number;
+        // for outbound it's to_number — use whichever is the external party
+        const contactPhone = isOutbound ? w.toNumber : w.fromNumber;
 
         return {
             id:                w.id,
@@ -119,10 +146,10 @@ export default class SmsMessaging extends LightningElement {
             bubbleClass,
             formattedDate:     this._formatDate(w.createdDate),
             status,
-            statusIcon:        STATUS_ICONS[status]   || STATUS_ICONS.Sent,
-            statusClass:       STATUS_CLASSES[status] || STATUS_CLASSES.Sent,
-            fromDisplay:       w.fromNumber || 'Contact',
-            isRead:            w.isRead || false
+            statusIcon:        STATUS_ICONS[status]   || STATUS_ICONS.sent,
+            statusClass:       STATUS_CLASSES[status] || STATUS_CLASSES.sent,
+            fromDisplay:       w.contactName || contactPhone || 'Contact',
+            isRead:            !cross   // cross-record msgs treated as contextual, not unread
         };
     }
 
@@ -167,11 +194,25 @@ export default class SmsMessaging extends LightningElement {
         const body = (this.newMessageBody || '').trim();
         if (!body) return;
 
+        if (this.recordId && !this._contactPhone) {
+            this.sendError = 'No recipient phone number found. Load messages first or check the record.';
+            return;
+        }
+        if (this.recordId && !this.fromNumber) {
+            this.sendError = 'No "From Number" configured. Set it in the component properties.';
+            return;
+        }
+
         this.isSending = true;
         this.sendError = '';
 
         const promise = this.recordId
-            ? sendSms({ recordId: this.recordId, messageBody: body })
+            ? sendSms({
+                recordId:    this.recordId,
+                messageBody: body,
+                toNumber:    this._contactPhone,
+                fromNumber:  this.fromNumber
+              })
             : Promise.resolve(this._buildMockOutbound(body));
 
         promise
@@ -183,7 +224,7 @@ export default class SmsMessaging extends LightningElement {
                 this.newMessageBody = '';
                 this._scrollToBottom();
                 this.dispatchEvent(new ShowToastEvent({
-                    title: 'Message Sent', message: 'SMS queued successfully.', variant: 'success'
+                    title: 'Message Sent', message: 'SMS sent via Dialpad.', variant: 'success'
                 }));
             })
             .catch(error => {
@@ -204,47 +245,53 @@ export default class SmsMessaging extends LightningElement {
             relatedRecordName: null,
             bubbleClass:       'sms-message sms-message--outbound',
             formattedDate:     this._formatDate(new Date().toISOString()),
-            status:            'Sent',
-            statusIcon:        STATUS_ICONS.Sent,
-            statusClass:       STATUS_CLASSES.Sent,
+            status:            'sent',
+            statusIcon:        STATUS_ICONS.sent,
+            statusClass:       STATUS_CLASSES.sent,
             fromDisplay:       'You',
             isRead:            true
         };
     }
 
-    // ── mock data (no recordId — App Builder preview) ─────────────────────────
+    // ── mock data (App Builder preview — no recordId) ─────────────────────────
 
     _mockMessages() {
         const ago = (mins) => new Date(Date.now() - mins * 60 * 1000).toISOString();
-
-        // Simulate a mix: some belong to this intake, some to another
         const showCross = this.showAllMessages;
+
         const msgs = [
-            { id:'1', direction:'Inbound',  messageBody:'Hi, is this appointment still on for tomorrow?', createdDate:ago(62), status:'Delivered', fromNumber:'+15551234567', isRead:true,  isCrossRecord:false, relatedRecordName:null },
-            { id:'2', direction:'Outbound', messageBody:"Yes, confirmed for 2 PM. We'll send a reminder.", createdDate:ago(58), status:'Delivered', fromNumber:'',             isRead:true,  isCrossRecord:false, relatedRecordName:null },
-            { id:'3', direction:'Inbound',  messageBody:'Great! Do I need to bring anything?',             createdDate:ago(55), status:'Delivered', fromNumber:'+15551234567', isRead:true,  isCrossRecord:false, relatedRecordName:null },
-            { id:'4', direction:'Outbound', messageBody:'Just your ID and insurance card.',                createdDate:ago(50), status:'Delivered', fromNumber:'',             isRead:true,  isCrossRecord:false, relatedRecordName:null },
-            { id:'5', direction:'Inbound',  messageBody:'Perfect. See you then!',                         createdDate:ago(3),  status:'Delivered', fromNumber:'+15551234567', isRead:false, isCrossRecord:false, relatedRecordName:null }
+            { id:'1', direction:'inbound',  messageBody:'Hi, is the appointment still on for tomorrow?', createdDate:ago(62), status:'delivered', fromNumber:'+15551234567', toNumber:'+18005559876', contactName:'Sarah Mitchell', contactPhone:'+15551234567', isCrossRecord:false, relatedRecordName:null },
+            { id:'2', direction:'outbound', messageBody:"Yes, confirmed for 2 PM. We'll send a reminder.", createdDate:ago(58), status:'delivered', fromNumber:'+18005559876', toNumber:'+15551234567', contactName:'Sarah Mitchell', contactPhone:'+15551234567', isCrossRecord:false, relatedRecordName:null },
+            { id:'3', direction:'inbound',  messageBody:'Great! Do I need to bring anything?',            createdDate:ago(55), status:'received',  fromNumber:'+15551234567', toNumber:'+18005559876', contactName:'Sarah Mitchell', contactPhone:'+15551234567', isCrossRecord:false, relatedRecordName:null },
+            { id:'4', direction:'outbound', messageBody:'Just your ID and insurance card.',               createdDate:ago(50), status:'delivered', fromNumber:'+18005559876', toNumber:'+15551234567', contactName:'Sarah Mitchell', contactPhone:'+15551234567', isCrossRecord:false, relatedRecordName:null },
+            { id:'5', direction:'inbound',  messageBody:'Perfect. See you then!',                        createdDate:ago(3),  status:'received',  fromNumber:'+15551234567', toNumber:'+18005559876', contactName:'Sarah Mitchell', contactPhone:'+15551234567', isCrossRecord:false, relatedRecordName:null }
         ];
 
         if (showCross) {
             msgs.splice(2, 0,
-                { id:'x1', direction:'Outbound', messageBody:'Your renewal documents are ready for review.', createdDate:ago(57), status:'Delivered', fromNumber:'', isRead:true, isCrossRecord:true, relatedRecordName:'Matter: Acme Renewal 2025' },
-                { id:'x2', direction:'Inbound',  messageBody:'Thanks, I will take a look this afternoon.',   createdDate:ago(56), status:'Delivered', fromNumber:'+15551234567', isRead:true, isCrossRecord:true, relatedRecordName:'Matter: Acme Renewal 2025' }
+                { id:'x1', direction:'outbound', messageBody:'Your renewal documents are ready for review.', createdDate:ago(57), status:'delivered', fromNumber:'+18005559876', toNumber:'+15551234567', contactName:'Sarah Mitchell', contactPhone:'+15551234567', isCrossRecord:true, relatedRecordName:'Matter: Acme Renewal 2025' },
+                { id:'x2', direction:'inbound',  messageBody:'Thanks, I will look at them this afternoon.',  createdDate:ago(56), status:'received',  fromNumber:'+15551234567', toNumber:'+18005559876', contactName:'Sarah Mitchell', contactPhone:'+15551234567', isCrossRecord:true, relatedRecordName:'Matter: Acme Renewal 2025' }
             );
             msgs.push(
-                { id:'x3', direction:'Outbound', messageBody:'Following up on your general account inquiry.', createdDate:ago(1), status:'Sent', fromNumber:'', isRead:true, isCrossRecord:true, relatedRecordName:'Acme Corp (Account)' }
+                { id:'x3', direction:'outbound', messageBody:'Following up on your general account inquiry.', createdDate:ago(1), status:'sent', fromNumber:'+18005559876', toNumber:'+15551234567', contactName:'Sarah Mitchell', contactPhone:'+15551234567', isCrossRecord:true, relatedRecordName:'Acme Corp (Account)' }
             );
         }
+
+        // Seed contact info for the mock send flow
+        this._contactPhone = '+15551234567';
+        this._contactName  = 'Sarah Mitchell';
 
         return msgs.map(w => this._toViewModel(w));
     }
 
     _buildMockOutbound(body) {
         return {
-            id: `mock-${Date.now()}`, direction:'Outbound', messageBody: body,
-            createdDate: new Date().toISOString(), status:'Sent',
-            fromNumber:'', isRead:true, isCrossRecord:false, relatedRecordName:null
+            id: `mock-${Date.now()}`, direction:'outbound', messageBody: body,
+            createdDate: new Date().toISOString(), status:'sent',
+            fromNumber: this.fromNumber || '+18005559876',
+            toNumber:   this._contactPhone || '+15551234567',
+            contactName: this._contactName, contactPhone: this._contactPhone,
+            isCrossRecord: false, relatedRecordName: null
         };
     }
 }
