@@ -7,8 +7,8 @@
  *   Intake__c   → Intake lookup
  *   Matter__c   → Matter lookup
  *
- * Intake__c and Matter__c records are expected to have an Account__c
- * lookup field pointing to their parent Account.
+ * litify_pm__Intake__c and litify_pm__Matter__c records reference their
+ * parent Account via the litify_pm__Client__c lookup field.
  */
 public with sharing class SmsMessagingController {
 
@@ -196,20 +196,20 @@ public with sharing class SmsMessagingController {
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private static Id resolveAccountId(Id recordId, String objectType) {
-        // Intake__c and Matter__c are expected to have a standard Account__c lookup
-        String q = 'SELECT Account__c FROM ' + objectType + ' WHERE Id = :recordId LIMIT 1';
+        // Litify Intake and Matter records reference their Account via litify_pm__Client__c
+        String q = 'SELECT litify_pm__Client__c FROM ' + objectType + ' WHERE Id = :recordId LIMIT 1';
         List<SObject> recs = Database.query(q);
-        if (recs.isEmpty())                        throw new AuraHandledException('Record not found: ' + recordId);
-        Id accountId = (Id) recs[0].get('Account__c');
-        if (accountId == null)                     throw new AuraHandledException('No account linked to this record.');
+        if (recs.isEmpty())                    throw new AuraHandledException('Record not found: ' + recordId);
+        Id accountId = (Id) recs[0].get('litify_pm__Client__c');
+        if (accountId == null)                 throw new AuraHandledException('No client/account linked to this record.');
         return accountId;
     }
 
     private static String resolveFilterField(String objectType) {
         Map<String, String> mapping = new Map<String, String>{
-            'Account'   => 'Party__c',
-            'Intake__c' => 'Intake__c',
-            'Matter__c' => 'Matter__c'
+            'Account'                => 'Party__c',
+            'litify_pm__Intake__c'   => 'Intake__c',
+            'litify_pm__Matter__c'   => 'Matter__c'
         };
         return mapping.get(objectType);
     }

@@ -5,7 +5,7 @@ import sendSms from '@salesforce/apex/SmsMessagingController.sendSms';
 
 const MAX_CHARS = 1600;
 
-const TOGGLE_OBJECTS = new Set(['Intake__c', 'Matter__c']);
+const TOGGLE_OBJECTS = new Set(['litify_pm__Intake__c', 'litify_pm__Matter__c']);
 
 // Dialpad message_status → icon mapping (all lowercase keys)
 const STATUS_ICONS = {
