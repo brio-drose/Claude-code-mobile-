@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Previous_Message__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <description>The messages that was create before this one and is used to set relationship fields</description>
+    <inlineHelpText>The messages that was create before this one and is used to set relationship fields</inlineHelpText>
+    <label>Previous Message</label>
+    <referenceTo>Dialpad_SMS_Event__c</referenceTo>
+    <relationshipLabel>Dialpad SMS Events</relationshipLabel>
+    <relationshipName>Dialpad_SMS_Events</relationshipName>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackTrending>false</trackTrending>
+    <type>Lookup</type>
+</CustomField>

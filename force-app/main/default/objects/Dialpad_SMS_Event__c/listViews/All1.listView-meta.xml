@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>All1</fullName>
+    <columns>NAME</columns>
+    <columns>direction__c</columns>
+    <columns>to_number__c</columns>
+    <columns>from_number__c</columns>
+    <columns>text__c</columns>
+    <columns>id__c</columns>
+    <columns>event_timestamp__c</columns>
+    <columns>CREATEDBY_USER</columns>
+    <columns>CREATED_DATE</columns>
+    <columns>Intake__c</columns>
+    <columns>Party__c</columns>
+    <columns>Matter__c</columns>
+    <columns>mms_url__c</columns>
+    <filterScope>Everything</filterScope>
+    <label>All</label>
+</ListView>
