@@ -3,193 +3,111 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>SMS Messaging Component — FlexiPage Tab Preview</title>
+<title>SMS Messaging — FlexiPage Tab Preview</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Salesforce Sans', Arial, sans-serif; background: #f4f6f9; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
 
-  body {
-    font-family: 'Salesforce Sans', Arial, sans-serif;
-    background: #f4f6f9;
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    overflow: hidden;
-  }
+  /* ── Simulated Salesforce chrome ── */
+  .page-chrome { background:#fff; border-bottom:1px solid #dddbda; padding:0 1.5rem; display:flex; align-items:center; gap:1rem; height:48px; flex-shrink:0; }
+  .page-chrome .app-name { font-weight:700; font-size:.9375rem; color:#080707; }
+  .page-chrome .record-name { font-size:.875rem; color:#706e6b; }
+  .page-chrome .sep { color:#dddbda; }
+  .tab-bar { background:#fff; border-bottom:1px solid #dddbda; display:flex; align-items:flex-end; padding:0 1.5rem; flex-shrink:0; }
+  .tab { padding:.625rem 1rem; font-size:.8125rem; color:#706e6b; cursor:pointer; border-bottom:3px solid transparent; white-space:nowrap; }
+  .tab.active { color:#0070d2; font-weight:600; border-bottom-color:#0070d2; }
+  .tab-content { flex:1 1 auto; padding:1rem 1.5rem; overflow:hidden; display:flex; flex-direction:column; }
 
-  /* ── Simulated FlexiPage chrome ── */
-  .page-chrome {
-    background: #fff;
-    border-bottom: 1px solid #dddbda;
-    padding: 0 1.5rem;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    height: 48px;
-    flex-shrink: 0;
-  }
-  .page-chrome .app-name {
-    font-weight: 700;
-    font-size: 0.9375rem;
-    color: #080707;
-  }
-  .page-chrome .record-name {
-    font-size: 0.875rem;
-    color: #706e6b;
-  }
-  .page-chrome .sep { color: #dddbda; }
-
-  /* ── Simulated tab bar ── */
-  .tab-bar {
-    background: #fff;
-    border-bottom: 1px solid #dddbda;
-    display: flex;
-    align-items: flex-end;
-    padding: 0 1.5rem;
-    flex-shrink: 0;
-  }
-  .tab {
-    padding: 0.625rem 1rem;
-    font-size: 0.8125rem;
-    color: #706e6b;
-    cursor: pointer;
-    border-bottom: 3px solid transparent;
-    white-space: nowrap;
-  }
-  .tab.active {
-    color: #0070d2;
-    font-weight: 600;
-    border-bottom-color: #0070d2;
-  }
-
-  /* ── Tab content area ── */
-  .tab-content {
-    flex: 1 1 auto;
-    padding: 1rem 1.5rem;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-  }
-
-  /* ── SMS Panel — mirrors the LWC exactly ── */
-  .sms-panel {
-    display: flex;
-    flex-direction: column;
-    flex: 1 1 auto;
-    background: #fff;
-    border: 1px solid #dddbda;
-    border-radius: 4px;
-    overflow: hidden;
-  }
+  /* ── SMS Panel ── */
+  .sms-panel { display:flex; flex-direction:column; flex:1 1 auto; background:#fff; border:1px solid #dddbda; border-radius:4px; overflow:hidden; }
 
   /* Header */
-  .sms-panel-header {
-    background: linear-gradient(135deg, #0070d2 0%, #005fb2 100%);
-    padding: 0.875rem 1rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-shrink: 0;
-  }
-  .header-left { display: flex; align-items: center; gap: 0.625rem; }
-  .header-icon { width: 20px; height: 20px; fill: rgba(255,255,255,.85); flex-shrink: 0; }
-  .sms-panel-title { color: #fff; font-size: 0.9375rem; font-weight: 700; line-height: 1.2; }
-  .sms-contact-name { color: rgba(255,255,255,.8); font-size: 0.75rem; margin-top: 1px; }
-  .refresh-btn {
-    background: none; border: none; cursor: pointer;
-    color: rgba(255,255,255,.75);
-    width: 28px; height: 28px;
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    transition: background .15s;
-  }
-  .refresh-btn:hover { background: rgba(255,255,255,.15); color: #fff; }
-  .refresh-btn svg { width: 16px; height: 16px; fill: currentColor; }
+  .sms-panel-header { background:linear-gradient(135deg,#0070d2 0%,#005fb2 100%); padding:.75rem 1rem; display:flex; align-items:center; justify-content:space-between; gap:.75rem; flex-shrink:0; }
+  .header-left { display:flex; align-items:center; gap:.625rem; min-width:0; }
+  .header-icon { width:20px; height:20px; fill:rgba(255,255,255,.85); flex-shrink:0; }
+  .sms-panel-title { color:#fff; font-size:.9375rem; font-weight:700; line-height:1.2; }
+  .sms-contact-name { color:rgba(255,255,255,.8); font-size:.75rem; margin-top:1px; }
+  .header-right { display:flex; align-items:center; gap:.75rem; flex-shrink:0; }
+
+  /* Toggle */
+  .toggle-wrap { display:flex; align-items:center; gap:.375rem; cursor:pointer; user-select:none; }
+  .toggle-label { color:rgba(255,255,255,.85); font-size:.75rem; font-weight:500; white-space:nowrap; }
+  .toggle-track { position:relative; width:36px; height:20px; background:rgba(255,255,255,.3); border-radius:10px; transition:background .2s; flex-shrink:0; }
+  .toggle-track.on { background:#ffd700; }
+  .toggle-thumb { position:absolute; top:3px; left:3px; width:14px; height:14px; background:#fff; border-radius:50%; transition:transform .2s; box-shadow:0 1px 3px rgba(0,0,0,.2); }
+  .toggle-track.on .toggle-thumb { transform:translateX(16px); }
+  .refresh-btn { background:none; border:none; cursor:pointer; color:rgba(255,255,255,.75); width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; transition:background .15s; flex-shrink:0; }
+  .refresh-btn:hover { background:rgba(255,255,255,.15); color:#fff; }
+  .refresh-btn svg { width:16px; height:16px; fill:currentColor; }
+
+  /* Info bar */
+  .sms-info-bar { display:flex; align-items:center; gap:.375rem; padding:.375rem 1rem; background:#fef3e2; border-bottom:1px solid #f9c776; font-size:.75rem; color:#514f4d; flex-shrink:0; }
+  .sms-info-bar svg { width:14px; height:14px; fill:#c07900; flex-shrink:0; }
 
   /* Thread */
-  .sms-thread {
-    flex: 1 1 auto;
-    overflow-y: auto;
-    padding: 1rem 1.25rem;
-    background: #f3f3f3;
-    display: flex;
-    flex-direction: column;
-  }
-  .msg-list { list-style: none; display: flex; flex-direction: column; gap: 0.625rem; }
+  .sms-thread { flex:1 1 auto; overflow-y:auto; padding:1rem 1.25rem; background:#f3f3f3; display:flex; flex-direction:column; }
+  .msg-list { list-style:none; display:flex; flex-direction:column; gap:.625rem; }
 
-  .msg { display: flex; flex-direction: column; max-width: 75%; }
-  .msg.out { align-self: flex-end; align-items: flex-end; }
-  .msg.in  { align-self: flex-start; align-items: flex-start; }
+  .msg { display:flex; flex-direction:column; max-width:75%; }
+  .msg.out, .msg.cross-out { align-self:flex-end; align-items:flex-end; }
+  .msg.in,  .msg.cross-in  { align-self:flex-start; align-items:flex-start; }
 
-  .bubble { padding: 0.5625rem 0.875rem; border-radius: 18px; word-break: break-word; line-height: 1.45; }
-  .msg.out .bubble { background: #0070d2; color: #fff; border-bottom-right-radius: 4px; }
-  .msg.in  .bubble { background: #fff; color: #080707; border-bottom-left-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,.1); }
+  .bubble { padding:.5625rem .875rem; border-radius:18px; word-break:break-word; line-height:1.45; }
+  .msg.out  .bubble { background:#0070d2; color:#fff; border-bottom-right-radius:4px; }
+  .msg.in   .bubble { background:#fff; color:#080707; border-bottom-left-radius:4px; box-shadow:0 1px 2px rgba(0,0,0,.1); }
 
-  .bubble-body { margin: 0 0 0.2rem; font-size: 0.875rem; }
-  .bubble-meta { display: flex; align-items: center; gap: 4px; justify-content: flex-end; }
-  .bubble-time { font-size: 0.6875rem; opacity: .7; white-space: nowrap; }
-  .msg.in .bubble-time { color: #706e6b; opacity: 1; }
-  .status-icon { width: 12px; height: 12px; fill: rgba(255,255,255,.85); }
-  .status-icon.failed { fill: #ffb3b3; }
-  .sender-label { font-size: 0.6875rem; color: #706e6b; margin-top: 2px; padding-left: 4px; }
+  /* Cross-record bubbles */
+  .msg.cross-out .bubble { background:#54698d; color:#fff; border-bottom-right-radius:4px; }
+  .msg.cross-in  .bubble { background:#fef3e2; color:#514f4d; border-bottom-left-radius:4px; border-left:3px solid #f9c776; box-shadow:0 1px 2px rgba(0,0,0,.08); }
 
-  /* Date divider */
-  .date-divider { display: flex; align-items: center; gap: 0.5rem; margin: 0.25rem 0 0.75rem; }
-  .date-divider::before, .date-divider::after { content: ''; flex: 1; height: 1px; background: #dddbda; }
-  .date-divider span { font-size: 0.6875rem; color: #706e6b; white-space: nowrap; }
+  .bubble-body { margin:0 0 .2rem; font-size:.875rem; }
+  .bubble-meta { display:flex; align-items:center; gap:4px; justify-content:flex-end; }
+  .bubble-time { font-size:.6875rem; opacity:.7; white-space:nowrap; }
+  .msg.in .bubble-time, .msg.cross-in .bubble-time { color:#706e6b; opacity:1; }
+  .status-icon { width:12px; height:12px; fill:rgba(255,255,255,.85); }
 
-  /* Compose footer */
-  .sms-compose-footer {
-    flex-shrink: 0;
-    padding: 0.75rem 1rem;
-    background: #fff;
-    border-top: 1px solid #dddbda;
-  }
-  .compose-area { display: flex; align-items: flex-end; gap: 0.5rem; }
-  .compose-input {
-    flex: 1;
-    border: 1px solid #dddbda; border-radius: 4px;
-    padding: 0.5rem 0.75rem;
-    font-size: 0.875rem; font-family: inherit;
-    resize: none; outline: none; height: 60px; line-height: 1.45;
-    color: #080707; transition: border-color .15s;
-  }
-  .compose-input:focus { border-color: #0070d2; box-shadow: 0 0 0 2px rgba(0,112,210,.2); }
-  .compose-input::placeholder { color: #b0adab; }
-  .compose-actions { display: flex; flex-direction: column; align-items: center; gap: 4px; padding-bottom: 2px; }
-  .char-count { font-size: 0.6875rem; color: #706e6b; min-width: 28px; text-align: center; }
-  .send-btn {
-    background: #0070d2; border: none; border-radius: 50%;
-    width: 36px; height: 36px;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer; transition: background .15s;
-  }
-  .send-btn:hover  { background: #005fb2; }
-  .send-btn:active { background: #004d99; }
-  .send-btn:disabled { background: #c9c7c5; cursor: not-allowed; }
-  .send-btn svg { width: 16px; height: 16px; fill: #fff; }
-  .hint-bar { display: flex; align-items: center; justify-content: flex-end; gap: 4px; margin-top: 4px; }
-  .hint-bar span { font-size: 0.6875rem; color: #b0adab; }
-  kbd { display: inline-block; padding: 1px 4px; border: 1px solid #dddbda; border-radius: 3px; font-size: 0.625rem; font-family: monospace; background: #f3f3f3; color: #706e6b; box-shadow: 0 1px 0 #c9c7c5; }
+  /* Cross-record badge */
+  .cross-badge { display:inline-flex; align-items:center; gap:.25rem; padding:.125rem .5rem; border-radius:10px; background:rgba(84,105,141,.12); border:1px solid rgba(84,105,141,.25); font-size:.6875rem; color:#3e4f6b; font-weight:600; margin-bottom:3px; white-space:nowrap; max-width:100%; overflow:hidden; text-overflow:ellipsis; }
+  .cross-badge svg { width:11px; height:11px; fill:#3e4f6b; flex-shrink:0; }
+  .msg.cross-in .cross-badge { background:rgba(249,199,118,.2); border-color:rgba(249,199,118,.5); color:#7a5500; }
+  .msg.cross-in .cross-badge svg { fill:#7a5500; }
+
+  .sender-label { font-size:.6875rem; color:#706e6b; margin-top:2px; padding-left:4px; }
+  .date-divider { display:flex; align-items:center; gap:.5rem; margin:.25rem 0 .75rem; }
+  .date-divider::before, .date-divider::after { content:''; flex:1; height:1px; background:#dddbda; }
+  .date-divider span { font-size:.6875rem; color:#706e6b; white-space:nowrap; }
+
+  /* Compose */
+  .sms-compose-footer { flex-shrink:0; padding:.75rem 1rem; background:#fff; border-top:1px solid #dddbda; }
+  .compose-area { display:flex; align-items:flex-end; gap:.5rem; }
+  .compose-input { flex:1; border:1px solid #dddbda; border-radius:4px; padding:.5rem .75rem; font-size:.875rem; font-family:inherit; resize:none; outline:none; height:60px; line-height:1.45; color:#080707; transition:border-color .15s; }
+  .compose-input:focus { border-color:#0070d2; box-shadow:0 0 0 2px rgba(0,112,210,.2); }
+  .compose-input::placeholder { color:#b0adab; }
+  .compose-actions { display:flex; flex-direction:column; align-items:center; gap:4px; padding-bottom:2px; }
+  .char-count { font-size:.6875rem; color:#706e6b; min-width:28px; text-align:center; }
+  .send-btn { background:#0070d2; border:none; border-radius:50%; width:36px; height:36px; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:background .15s; }
+  .send-btn:hover { background:#005fb2; }
+  .send-btn:disabled { background:#c9c7c5; cursor:not-allowed; }
+  .send-btn svg { width:16px; height:16px; fill:#fff; }
+  .hint-bar { display:flex; align-items:center; justify-content:flex-end; gap:4px; margin-top:4px; }
+  .hint-bar span { font-size:.6875rem; color:#b0adab; }
+  kbd { display:inline-block; padding:1px 4px; border:1px solid #dddbda; border-radius:3px; font-size:.625rem; font-family:monospace; background:#f3f3f3; color:#706e6b; box-shadow:0 1px 0 #c9c7c5; }
 </style>
 </head>
 <body>
 
-<!-- Simulated Salesforce page chrome -->
 <div class="page-chrome">
   <span class="app-name">Service Console</span>
   <span class="sep">›</span>
-  <span class="record-name">Sarah Mitchell</span>
+  <span class="record-name">Acme Corp › Intake: Workers Comp Claim #4821</span>
 </div>
-
-<!-- Simulated tab bar -->
 <div class="tab-bar">
   <div class="tab">Details</div>
   <div class="tab">Activity</div>
   <div class="tab active">SMS</div>
-  <div class="tab">Cases</div>
+  <div class="tab">Documents</div>
 </div>
 
-<!-- Tab content — the LWC panel fills this area -->
 <div class="tab-content">
   <div class="sms-panel">
 
@@ -202,9 +120,24 @@
           <div class="sms-contact-name">Sarah Mitchell · +1 (555) 123-4567</div>
         </div>
       </div>
-      <button class="refresh-btn" title="Refresh messages">
-        <svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
-      </button>
+      <div class="header-right">
+        <!-- Toggle -->
+        <div class="toggle-wrap" onclick="toggleShowAll()">
+          <span class="toggle-label">All account messages</span>
+          <div class="toggle-track" id="toggleTrack">
+            <div class="toggle-thumb"></div>
+          </div>
+        </div>
+        <button class="refresh-btn" title="Refresh">
+          <svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Info bar (hidden until toggle on) -->
+    <div class="sms-info-bar" id="infoBar" style="display:none">
+      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+      <span>Showing all messages for this account &mdash; <strong>highlighted messages belong to other records</strong></span>
     </div>
 
     <!-- Thread -->
@@ -214,75 +147,123 @@
 
         <li class="msg in">
           <div class="bubble"><p class="bubble-body">Hi, is this appointment still on for tomorrow?</p>
-            <div class="bubble-meta"><span class="bubble-time">2:14 PM</span></div>
-          </div>
+            <div class="bubble-meta"><span class="bubble-time">2:14 PM</span></div></div>
           <span class="sender-label">+1 (555) 123-4567</span>
         </li>
 
         <li class="msg out">
           <div class="bubble"><p class="bubble-body">Yes, confirmed for 2 PM. We'll send a reminder an hour before.</p>
             <div class="bubble-meta"><span class="bubble-time">2:17 PM</span>
-              <svg class="status-icon" viewBox="0 0 24 24" title="Delivered"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-            </div>
-          </div>
+              <svg class="status-icon" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            </div></div>
         </li>
 
         <li class="msg in">
           <div class="bubble"><p class="bubble-body">Great! Do I need to bring anything with me?</p>
-            <div class="bubble-meta"><span class="bubble-time">2:21 PM</span></div>
-          </div>
+            <div class="bubble-meta"><span class="bubble-time">2:21 PM</span></div></div>
           <span class="sender-label">+1 (555) 123-4567</span>
         </li>
 
         <li class="msg out">
           <div class="bubble"><p class="bubble-body">Just your ID and insurance card. Parking is free in Lot B.</p>
             <div class="bubble-meta"><span class="bubble-time">2:25 PM</span>
-              <svg class="status-icon" viewBox="0 0 24 24" title="Delivered"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-            </div>
-          </div>
+              <svg class="status-icon" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            </div></div>
         </li>
 
         <div class="date-divider"><span>Today</span></div>
 
         <li class="msg in">
           <div class="bubble"><p class="bubble-body">Perfect, thank you! See you then 😊</p>
-            <div class="bubble-meta"><span class="bubble-time">9:03 AM</span></div>
-          </div>
+            <div class="bubble-meta"><span class="bubble-time">9:03 AM</span></div></div>
           <span class="sender-label">+1 (555) 123-4567</span>
         </li>
 
       </ul>
     </div>
 
-    <!-- Compose footer -->
+    <!-- Compose -->
     <div class="sms-compose-footer">
       <div class="compose-area">
         <textarea id="composeInput" class="compose-input" placeholder="Type a message…"
           oninput="updateCount()" onkeydown="handleKey(event)"></textarea>
         <div class="compose-actions">
           <span class="char-count" id="charCount">1600</span>
-          <button class="send-btn" id="sendBtn" onclick="sendMessage()" title="Send (Ctrl+Enter)" disabled>
+          <button class="send-btn" id="sendBtn" onclick="sendMessage()" disabled>
             <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
           </button>
         </div>
       </div>
-      <div class="hint-bar">
-        <span>Send with</span><kbd>Ctrl</kbd><span>+</span><kbd>Enter</kbd>
-      </div>
+      <div class="hint-bar"><span>Send with</span><kbd>Ctrl</kbd><span>+</span><kbd>Enter</kbd></div>
     </div>
 
   </div>
 </div>
 
 <script>
-  // Scroll to bottom on load
   const thread = document.getElementById('thread');
   thread.scrollTop = thread.scrollHeight;
 
+  let showAll = false;
+
+  // Cross-record messages injected when toggle is ON
+  const crossMsgs = [
+    { dir:'cross-out', body:'Your renewal documents are ready for your review.', time:'2:19 PM', record:'Matter: Acme Renewal 2025' },
+    { dir:'cross-in',  body:'Thanks, I'll take a look this afternoon.',          time:'2:20 PM', record:'Matter: Acme Renewal 2025', sender:'+1 (555) 123-4567' },
+    { dir:'cross-out', body:'Following up on your general account inquiry — please let us know if you need anything else.', time:'9:45 AM', record:'Acme Corp (Account)' },
+  ];
+
+  function toggleShowAll() {
+    showAll = !showAll;
+    document.getElementById('toggleTrack').classList.toggle('on', showAll);
+    document.getElementById('infoBar').style.display = showAll ? 'flex' : 'none';
+
+    // Remove existing cross-record messages
+    document.querySelectorAll('.cross-msg-item').forEach(el => el.remove());
+    document.querySelectorAll('.cross-divider').forEach(el => el.remove());
+
+    if (showAll) {
+      const list = document.getElementById('msgList');
+
+      // Inject "yesterday" cross messages after index 1 (after first outbound)
+      const afterEl = list.children[1];
+      crossMsgs.slice(0,2).forEach(m => {
+        const li = buildCrossMsgEl(m);
+        afterEl.insertAdjacentElement('afterend', li);
+      });
+
+      // Inject "today" cross message at end
+      const divider = document.createElement('div');
+      divider.className = 'cross-divider';
+      const todayDiv = list.querySelector('.date-divider:last-of-type');
+      // just append at end
+      const li3 = buildCrossMsgEl(crossMsgs[2]);
+      list.appendChild(li3);
+      thread.scrollTop = thread.scrollHeight;
+    }
+  }
+
+  function buildCrossMsgEl(m) {
+    const li = document.createElement('li');
+    li.className = `msg ${m.dir} cross-msg-item`;
+    const statusSvg = m.dir === 'cross-out'
+      ? `<svg class="status-icon" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>`
+      : '';
+    const senderEl = m.sender ? `<span class="sender-label">${esc(m.sender)}</span>` : '';
+    const recordIcon = `<svg viewBox="0 0 24 24"><path d="M20 6h-2.18c.07-.44.18-.88.18-1 0-2.21-1.79-4-4-4s-4 1.79-4 4c0 .12.11.56.18 1H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2z"/></svg>`;
+    li.innerHTML = `
+      <div class="cross-badge">${recordIcon}${esc(m.record)}</div>
+      <div class="bubble">
+        <p class="bubble-body">${esc(m.body)}</p>
+        <div class="bubble-meta"><span class="bubble-time">${m.time}</span>${statusSvg}</div>
+      </div>${senderEl}`;
+    return li;
+  }
+
   function updateCount() {
-    const val = document.getElementById('composeInput').value;
-    document.getElementById('charCount').textContent = 1600 - val.length;
-    document.getElementById('sendBtn').disabled = !val.trim();
+    const v = document.getElementById('composeInput').value;
+    document.getElementById('charCount').textContent = 1600 - v.length;
+    document.getElementById('sendBtn').disabled = !v.trim();
   }
 
   function handleKey(e) {
@@ -293,59 +274,27 @@
     const input = document.getElementById('composeInput');
     const body  = input.value.trim();
     if (!body) return;
-
-    appendMessage('out', body, 'pending');
+    appendMsg('out', body);
     input.value = '';
     updateCount();
-    thread.scrollTop = thread.scrollHeight;
-
-    // Simulate delivery confirmation
     setTimeout(() => {
-      const pending = document.querySelector('.status-icon.pending');
-      if (pending) {
-        pending.classList.remove('pending');
-        pending.innerHTML = '<path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>';
-        pending.title = 'Delivered';
-      }
-    }, 800);
-
-    // Simulate inbound reply
-    setTimeout(() => {
-      appendMessage('in', 'Got it, thanks for the update!', null, '+1 (555) 123-4567');
-      thread.scrollTop = thread.scrollHeight;
-    }, 1800);
+      appendMsg('in', 'Got it, thanks!', '+1 (555) 123-4567');
+    }, 1600);
   }
 
-  function appendMessage(dir, text, statusClass, sender) {
-    const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  function appendMsg(dir, text, sender) {
+    const now = new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
     const li = document.createElement('li');
     li.className = `msg ${dir}`;
-
-    const statusSvg = dir === 'out'
-      ? `<svg class="status-icon ${statusClass || ''}" viewBox="0 0 24 24" title="Sent">
-           <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
-         </svg>`
-      : '';
-
-    const senderEl = dir === 'in' && sender
-      ? `<span class="sender-label">${esc(sender)}</span>`
-      : '';
-
-    li.innerHTML = `
-      <div class="bubble">
-        <p class="bubble-body">${esc(text)}</p>
-        <div class="bubble-meta">
-          <span class="bubble-time">${now}</span>
-          ${statusSvg}
-        </div>
-      </div>
-      ${senderEl}`;
-
+    const statusSvg = dir === 'out' ? `<svg class="status-icon" viewBox="0 0 24 24" style="fill:rgba(255,255,255,.6)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>` : '';
+    const senderEl = sender ? `<span class="sender-label">${esc(sender)}</span>` : '';
+    li.innerHTML = `<div class="bubble"><p class="bubble-body">${esc(text)}</p><div class="bubble-meta"><span class="bubble-time">${now}</span>${statusSvg}</div></div>${senderEl}`;
     document.getElementById('msgList').appendChild(li);
+    thread.scrollTop = thread.scrollHeight;
   }
 
   function esc(s) {
-    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 </script>
 </body>

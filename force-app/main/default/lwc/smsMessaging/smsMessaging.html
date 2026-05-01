@@ -3,22 +3,46 @@
 
         <!-- Header -->
         <header class="sms-panel-header">
-            <div class="sms-header-content">
+            <div class="sms-header-left">
                 <lightning-icon icon-name="utility:sms" size="small" class="sms-header-icon"></lightning-icon>
                 <div>
                     <h2 class="sms-panel-title">SMS Conversation</h2>
                     <p class="sms-contact-name">{contactDisplayName}</p>
                 </div>
             </div>
-            <lightning-button-icon
-                icon-name="utility:refresh"
-                variant="bare-inverse"
-                alternative-text="Refresh"
-                title="Refresh messages"
-                onclick={loadMessages}
-                disabled={isLoading}
-            ></lightning-button-icon>
+            <div class="sms-header-right">
+                <template if:true={showToggle}>
+                    <lightning-input
+                        type="toggle"
+                        label="All account messages"
+                        name="showAll"
+                        checked={showAllMessages}
+                        onchange={handleToggle}
+                        class="sms-toggle"
+                        message-toggle-active=""
+                        message-toggle-inactive=""
+                    ></lightning-input>
+                </template>
+                <lightning-button-icon
+                    icon-name="utility:refresh"
+                    variant="bare-inverse"
+                    alternative-text="Refresh"
+                    title="Refresh messages"
+                    onclick={loadMessages}
+                    disabled={isLoading}
+                ></lightning-button-icon>
+            </div>
         </header>
+
+        <!-- Show-all info bar -->
+        <template if:true={showAllMessages}>
+            <div class="sms-info-bar">
+                <lightning-icon icon-name="utility:info" size="xx-small" class="sms-info-icon"></lightning-icon>
+                <span>Showing all messages for this account &mdash;
+                    <strong>highlighted messages belong to other records</strong>
+                </span>
+            </div>
+        </template>
 
         <!-- Message thread -->
         <div class="sms-thread" lwc:ref="messageContainer">
@@ -49,6 +73,19 @@
                 <ul class="sms-message-list">
                     <template for:each={messages} for:item="msg">
                         <li key={msg.id} class={msg.bubbleClass}>
+
+                            <!-- Cross-record badge (shown above bubble) -->
+                            <template if:true={msg.isCrossRecord}>
+                                <div class="sms-cross-badge">
+                                    <lightning-icon
+                                        icon-name="utility:record_alt"
+                                        size="xx-small"
+                                        class="sms-cross-badge-icon"
+                                    ></lightning-icon>
+                                    <span>{msg.relatedRecordName}</span>
+                                </div>
+                            </template>
+
                             <div class="sms-bubble">
                                 <p class="sms-bubble-body">{msg.body}</p>
                                 <div class="sms-bubble-meta">
@@ -63,16 +100,18 @@
                                     </template>
                                 </div>
                             </div>
+
                             <template if:true={msg.isInbound}>
                                 <span class="sms-sender-label">{msg.fromDisplay}</span>
                             </template>
+
                         </li>
                     </template>
                 </ul>
             </template>
         </div>
 
-        <!-- Compose area -->
+        <!-- Compose footer -->
         <footer class="sms-compose-footer">
             <div class="sms-compose-area">
                 <lightning-textarea
